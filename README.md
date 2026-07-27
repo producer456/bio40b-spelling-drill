@@ -86,6 +86,16 @@ use Teacher Mode in the labeling app.
 generator builds them from the source practical materials. They are committed
 here so this site stands alone.
 
+## Answer-key backup
+
+`backup/bio40b-lab-exam-2-answer-key-verified-2026-07-27.json` is the verified
+key — 19 stations, 121 pins — in the labeling app's own backup format. Feed it
+to that app's **Import Data** button to restore a device whose saved key has
+been lost or corrupted; it overwrites the stored key and canvas with these
+positions. It was generated from `PRESET_KEYS` in `data.js` and checked
+field-for-field against a browser whose stations had all been reset with
+*Restore Original Key*, then verified by importing it into an empty browser.
+
 ## Image credits
 
 Figures come from several sources under different licences — several are
