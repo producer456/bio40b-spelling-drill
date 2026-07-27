@@ -88,6 +88,11 @@
 /* ---- Image: container hugs the image so pin percentages line up ---- */
 .spell-page .image-viewport {
     min-height: 320px;
+    /* The key parks many pins at the outer end of the figure's own printed
+       leader lines, i.e. right on the image edge. Inset the image so those
+       pins and their bubbles still have somewhere to render when the viewport
+       is no wider than the image, which is every phone. */
+    padding: 16px 26px;
     /* Dragging a pin must not smear a text selection across the page. */
     user-select: none;
     -webkit-user-select: none;
@@ -628,6 +633,7 @@
        it, so the pin percentages still land on the right spot. */
     .spell-page .image-viewport { min-height: 0; }
     .spell-page .image-container img { max-height: 34vh; width: auto; }
+    .spell-page .image-viewport { padding: 22px 30px; }
 }
 
 @media (max-width: 600px) {

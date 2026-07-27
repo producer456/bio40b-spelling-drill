@@ -1276,6 +1276,39 @@ function renderPin() {
               style="left:${pin.x + dx}%; top:${pin.y + dy}%">${
                 solved ? escapeHtml(pin.word) : '?'
               }</div>`;
+    clampTag();
+}
+
+// A label parked in the margin keeps the anatomy clear, which is why the key
+// puts several of them past the edge of the image. There is only room for that
+// when the viewport is wider than the image, so pull the tag back inside
+// whenever it would otherwise be clipped -- and move the leader line with it.
+function clampTag() {
+    const tag = document.querySelector('.quiz-tag');
+    const viewport = document.getElementById('image-viewport');
+    const container = document.getElementById('image-container');
+    if (!tag || !container.offsetWidth || !container.offsetHeight) return;
+
+    const pad = 6;
+    const halfW = (tag.offsetWidth || 24) / 2 + pad;
+    const halfH = (tag.offsetHeight || 20) / 2 + pad;
+    // Room available, expressed in the same percentage space the pins use.
+    const toPctX = px => (px / container.offsetWidth) * 100;
+    const toPctY = px => (px / container.offsetHeight) * 100;
+    const minX = toPctX((-container.offsetLeft - panX) / zoomLevel + halfW);
+    const maxX = toPctX((viewport.clientWidth - container.offsetLeft - panX) / zoomLevel - halfW);
+    const minY = toPctY((-container.offsetTop - panY) / zoomLevel + halfH);
+    const maxY = toPctY((viewport.clientHeight - container.offsetTop - panY) / zoomLevel - halfH);
+
+    const want = { x: parseFloat(tag.style.left), y: parseFloat(tag.style.top) };
+    const x = maxX > minX ? clamp(want.x, minX, maxX) : want.x;
+    const y = maxY > minY ? clamp(want.y, minY, maxY) : want.y;
+    if (x === want.x && y === want.y) return;
+
+    tag.style.left = x + '%';
+    tag.style.top = y + '%';
+    const line = document.querySelector('#lines-layer line');
+    if (line) { line.setAttribute('x2', x + '%'); line.setAttribute('y2', y + '%'); }
 }
 
 function renderProgress() {
@@ -1383,6 +1416,7 @@ function applyZoom() {
     container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
     document.getElementById('zoom-level').textContent = Math.round(zoomLevel * 100) + '%';
     document.getElementById('image-viewport').classList.toggle('zoomed', zoomLevel > 1.05);
+    if (q && !isTeacher()) renderPin();   // re-place a tag that zoom pushed out of view
 }
 
 function contentBox() {
