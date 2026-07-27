@@ -95,6 +95,7 @@ labeling app. Editing here never touches that app's storage.
 | `pins.js` | **This site's answer key** — the pin positions it ships with |
 | `data.js` | Stations, word banks, the labeling app's key, credits |
 | `images/` | The figures |
+| `tools/key-to-pins.py` | Turns an exported key into `pins.js` |
 
 `data.js`, `styles.css` and `images/` are copied from the labeling app, whose
 generator builds them from the source practical materials. They are committed
@@ -114,12 +115,12 @@ repeat, then **Export key for the site**. Convert the exported JSON into
 `pins.js` and commit it:
 
 ```sh
-python3 - <<'EOF'
-import json
-d = json.load(open('bio40b-spelling-drill-pins.json'))
-open('pins.js','w').write('const DRILL_KEYS = %s;\n' % json.dumps(d['keys'], indent=2))
-EOF
+python3 tools/key-to-pins.py ~/Downloads/bio40b-spelling-drill-pins.json
 ```
+
+It reports how many pins moved, and refuses to write a key with fewer stations
+or pins than the committed one — an export taken from a browser with half-wiped
+storage would otherwise quietly delete stations for everybody.
 
 Then **Reset every station** in the browser, so the site's freshly committed key
 is what you see rather than the local copy of it.
