@@ -260,13 +260,22 @@ function escapeHtml(s) {
 // Data
 // ============================================================
 
+// A saved key comes out of localStorage, so it can be anything: hand-edited,
+// half-written, or from an older format. Keep only pins we can actually draw,
+// and fall back to the shipped key rather than throwing on the way in.
+function usablePins(list) {
+    return (Array.isArray(list) ? list : []).filter(p =>
+        p && typeof p.word === 'string' && p.word.trim() &&
+        Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)));
+}
+
 function loadKeys() {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(KEY_STORE) || '{}') || {}; } catch (e) {}
     ANSWER_KEYS = {};
     IMAGE_ORDER.forEach(station => {
-        const pins = (saved[station] && saved[station].length) ? saved[station] : PRESET_KEYS[station];
-        ANSWER_KEYS[station] = (pins || []).filter(p => p && p.word);
+        const fromSaved = usablePins(saved[station]);
+        ANSWER_KEYS[station] = fromSaved.length ? fromSaved : usablePins(PRESET_KEYS[station]);
     });
 
     allPins = [];
@@ -624,7 +633,8 @@ function stationsForScope() {
 
 function startTest() {
     stopClock();
-    test = { stations: stationsForScope(), sIdx: 0, answers: {}, deadline: 0, timerId: null, reports: [] };
+    test = { stations: stationsForScope(), sIdx: 0, answers: {}, deadline: 0,
+             timerId: null, reports: [], graded: false };
     document.getElementById('summary').style.display = 'none';
     startStation();
 }
@@ -639,6 +649,7 @@ function startStation() {
         }
     }
     deckPos = 0;
+    test.graded = false;
     document.getElementById('summary').style.display = 'none';
     startClock(settings.minutes * 60);
     loadQuestion();
@@ -679,8 +690,11 @@ function stashAnswer() {
 }
 
 // The buzzer, or "Finish station" — grade every pin of the station at once.
+// Guarded: the clock can expire in the same tick as the button click, and a
+// station must be graded and reported exactly once either way.
 function finishStation(ranOut) {
-    if (!isTest()) return;
+    if (!isTest() || test.graded) return;
+    test.graded = true;
     stashAnswer();
     stopClock();
 
@@ -744,7 +758,8 @@ function renderStationReport(ranOut) {
 }
 
 function nextStation() {
-    if (!isTest()) return;
+    if (!isTest() || !test.graded) return;   // nothing marked to move on from
+    test.graded = false;
     test.sIdx++;
     if (test.sIdx >= test.stations.length) { finishTest(); return; }
     startStation();
