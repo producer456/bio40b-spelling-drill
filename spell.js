@@ -7,8 +7,11 @@
 
 const RESULT_STORE   = 'bio40b_spell_results';
 const SETTINGS_STORE = 'bio40b_spell_settings';
-const KEY_STORE      = 'bio40b_labexam2_answerKeys';   // shared with the labeling app
-const MARKER_STORE   = 'bio40b_labexam2_markers';      // the labeling app's canvas copy
+// This site's own pin key. Deliberately NOT the labeling app's store: a pin
+// here has to be identifiable with no label showing, so its position is a
+// different judgement and must be editable without disturbing that app.
+const KEY_STORE      = 'bio40b_spell_answerKeys';      // this device's edits
+// pins.js ships the committed key; PRESET_KEYS in data.js is the last resort.
 
 // Names a student can reasonably type instead of the key's wording. These are
 // synonyms, not spellings -- a misspelt synonym still gets the spelling hint.
@@ -60,6 +63,7 @@ const ALIASES = {
 
 // ---- State ----
 let ANSWER_KEYS = {};
+let EDITED_STATIONS = [];   // stations changed on this device but not yet committed to the site
 let allPins  = [];          // every pin in the whole practical, in station order
 let deck     = [];          // the pins in the current run
 let deckPos  = 0;
@@ -269,13 +273,21 @@ function usablePins(list) {
         Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)));
 }
 
+// The key that ships with the site, before any local edits.
+function shippedPins(station) {
+    const drill = (typeof DRILL_KEYS !== 'undefined') ? usablePins(DRILL_KEYS[station]) : [];
+    return drill.length ? drill : usablePins(PRESET_KEYS[station]);
+}
+
 function loadKeys() {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(KEY_STORE) || '{}') || {}; } catch (e) {}
     ANSWER_KEYS = {};
+    EDITED_STATIONS = [];
     IMAGE_ORDER.forEach(station => {
         const fromSaved = usablePins(saved[station]);
-        ANSWER_KEYS[station] = fromSaved.length ? fromSaved : usablePins(PRESET_KEYS[station]);
+        if (fromSaved.length) EDITED_STATIONS.push(station);
+        ANSWER_KEYS[station] = fromSaved.length ? fromSaved : shippedPins(station);
     });
 
     allPins = [];
@@ -389,6 +401,9 @@ function startTeacher() {
     deckPos = 0;
     q = { item: deck[0], attempts: 0, hintLevel: 0, solved: false, revealed: false };
     document.getElementById('summary').style.display = 'none';
+    document.getElementById('image-container').classList.remove('labels-hidden');
+    const lbtn = document.getElementById('btn-labels');
+    if (lbtn) lbtn.textContent = 'Hide labels';
     document.getElementById('teacher-station').innerHTML =
         `<b>${escapeHtml(IMAGE_DATA[station].title)}</b><br>` +
         `<span class="station-sub">${teacher.pins.length} pins &mdash; drag to correct</span>`;
@@ -544,21 +559,92 @@ function saveTeacherKey() {
         setTeacherStatus('Could not save — storage is full or blocked', 'error');
         return;
     }
-    // The labeling app keeps its own canvas copy of a station's pins and only
-    // re-seeds it from the key when it's missing. Drop the stale copy, or its
-    // Teacher Mode would keep showing the pins we just corrected.
-    try {
-        const canvas = JSON.parse(localStorage.getItem(MARKER_STORE) || '{}') || {};
-        if (canvas[teacher.station]) {
-            delete canvas[teacher.station];
-            localStorage.setItem(MARKER_STORE, JSON.stringify(canvas));
-        }
-    } catch (e) {}
-
     teacher.dirty = false;
     loadKeys();                       // refresh pins + accepted spellings
-    setTeacherStatus(`Saved ${teacher.pins.length} pins for this station`, 'saved');
-    showToast('Answer key saved — the labeling app sees it too', 'success');
+    setTeacherStatus(`Saved ${teacher.pins.length} pins on this device. ` +
+                     `${EDITED_STATIONS.length} station(s) now differ from the site's key — ` +
+                     `export when you're done.`, 'saved');
+    showToast('Saved on this device — export to make it the site\'s key', 'success');
+}
+
+// ---- Making local edits the site's key ----
+
+// Every station as it currently stands, edits included. This is what gets
+// committed to the repo as pins.js, and what another device imports.
+function buildKeyPayload() {
+    const keys = {};
+    IMAGE_ORDER.forEach(st => { if (ANSWER_KEYS[st] && ANSWER_KEYS[st].length) keys[st] = ANSWER_KEYS[st]; });
+    return {
+        app: 'bio40b-spelling-drill',
+        version: 1,
+        stations: Object.keys(keys).length,
+        pins: Object.values(keys).reduce((n, a) => n + a.length, 0),
+        editedOnThisDevice: EDITED_STATIONS.slice(),
+        keys
+    };
+}
+
+function exportKey() {
+    if (isTeacher() && teacher.dirty) { setTeacherStatus('Save this station first', 'error'); return; }
+    const payload = buildKeyPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bio40b-spelling-drill-pins.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTeacherStatus(`Exported ${payload.pins} pins across ${payload.stations} stations`, 'saved');
+    showToast('Exported — commit this file to make it the site’s key', 'success');
+}
+
+function importKey(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        let payload;
+        try { payload = JSON.parse(e.target.result); }
+        catch (err) { setTeacherStatus('That file is not valid JSON', 'error'); event.target.value=''; return; }
+        const keys = payload && payload.keys;
+        if (!keys || typeof keys !== 'object') { setTeacherStatus('No pin key in that file', 'error'); event.target.value=''; return; }
+        const clean = {};
+        let pins = 0;
+        IMAGE_ORDER.forEach(st => { const list = usablePins(keys[st]); if (list.length) { clean[st] = list; pins += list.length; } });
+        if (!pins) { setTeacherStatus('That file held no usable pins', 'error'); event.target.value=''; return; }
+        if (!confirm(`Import ${pins} pins across ${Object.keys(clean).length} stations?\n\n` +
+                     `This replaces the pin positions saved on this device.`)) { event.target.value=''; return; }
+        try { localStorage.setItem(KEY_STORE, JSON.stringify(clean)); }
+        catch (err) { setTeacherStatus('Could not save — storage is full or blocked', 'error'); return; }
+        loadKeys();
+        if (isTeacher()) startTeacher();
+        setTeacherStatus(`Imported ${pins} pins across ${Object.keys(clean).length} stations`, 'saved');
+        showToast('Pin key imported', 'success');
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// Put every station back to the key the site ships with, dropping local edits.
+function resetAllStations() {
+    if (!confirm('Reset every station to the pin positions this site ships with?\n\n' +
+                 'Your saved pin edits on this device will be discarded.')) return;
+    try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+    loadKeys();
+    if (isTeacher()) startTeacher();
+    setTeacherStatus('All stations back to the site’s key', 'saved');
+    showToast('All stations reset', 'success');
+}
+
+// Judge a placement the way a student meets it: pin only, no labels.
+function toggleLabels() {
+    const hidden = document.getElementById('image-container').classList.toggle('labels-hidden');
+    document.getElementById('btn-labels').textContent = hidden ? 'Show labels' : 'Hide labels';
+    setTeacherStatus(hidden ? 'Labels hidden — this is what a student sees' : '',
+                     hidden ? 'dirty' : '');
+    if (!hidden && teacher && teacher.dirty) setTeacherStatus('Unsaved changes', 'dirty');
 }
 
 // Back to the last saved state, discarding this session's dragging.
@@ -573,8 +659,8 @@ function revertTeacherEdits() {
 // Back to the pins that shipped with the app.
 function restoreTeacherPreset() {
     if (!isTeacher()) return;
-    const preset = PRESET_KEYS[teacher.station];
-    if (!preset || !preset.length) { setTeacherStatus('No original key for this station', 'error'); return; }
+    const preset = shippedPins(teacher.station);
+    if (!preset.length) { setTeacherStatus('No original key for this station', 'error'); return; }
     teacher.pins = JSON.parse(JSON.stringify(preset));
     teacher.dirty = true;
     renderTeacherPins();
@@ -1525,5 +1611,9 @@ window.drillTestMisses = drillTestMisses;
 window.saveTeacherKey = saveTeacherKey;
 window.revertTeacherEdits = revertTeacherEdits;
 window.restoreTeacherPreset = restoreTeacherPreset;
+window.exportKey = exportKey;
+window.importKey = importKey;
+window.resetAllStations = resetAllStations;
+window.toggleLabels = toggleLabels;
 
 document.addEventListener('DOMContentLoaded', init);

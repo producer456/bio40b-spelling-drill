@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BIOL 40B — Lab Exam 2 Spelling Drill</title>
     <link rel="stylesheet" href="styles.css?v=2">
-    <link rel="stylesheet" href="spell.css?v=2">
+    <link rel="stylesheet" href="spell.css?v=3">
 </head>
 <body class="spell-page">
     <header>
@@ -76,15 +76,26 @@
                         text; the leader line follows. Nothing is saved until you press Save.
                     </p>
                     <div class="teacher-actions">
-                        <button class="action-btn save-btn" onclick="saveTeacherKey()">Save answer key</button>
+                        <button class="action-btn save-btn" onclick="saveTeacherKey()">Save this station</button>
+                        <button class="action-btn data-btn" id="btn-labels" onclick="toggleLabels()">Hide labels</button>
                         <button class="action-btn reset-btn" onclick="revertTeacherEdits()">Undo my edits</button>
-                        <button class="action-btn data-btn" onclick="restoreTeacherPreset()">Restore original key</button>
+                        <button class="action-btn data-btn" onclick="restoreTeacherPreset()">Restore this station</button>
                     </div>
                     <div class="teacher-status" id="teacher-status"></div>
+                    <div class="teacher-export">
+                        <div class="export-head">Make it the site&rsquo;s key</div>
+                        <button class="action-btn submit-btn" onclick="exportKey()">Export key for the site</button>
+                        <button class="action-btn data-btn" onclick="document.getElementById('import-key').click()">Import a key file</button>
+                        <input type="file" id="import-key" accept="application/json,.json" style="display:none;" onchange="importKey(event)">
+                        <button class="action-btn reset-btn" onclick="resetAllStations()">Reset every station</button>
+                    </div>
                     <p class="teacher-note">
-                        Saved keys are shared with the labeling app on this device, so a pin fixed
-                        here is fixed there too. To add, delete or re-assign a pin, use
-                        <a href="https://producer456.github.io/bio40b-lab-exam-2-labeling/" target="_blank" rel="noopener">Teacher Mode in the labeling app</a>.
+                        Edits are saved on this device only. <b>Export</b> when you&rsquo;ve finished a
+                        pass and commit the file as <code>pins.js</code> &mdash; that is what makes it
+                        the answer key everyone sees. <b>Hide labels</b> shows the pin the way a
+                        student meets it, with nothing named. Pin positions here are independent of the
+                        <a href="https://producer456.github.io/bio40b-lab-exam-2-labeling/" target="_blank" rel="noopener">labeling app</a>;
+                        editing here does not touch it. To add, delete or re-assign a pin, use that app.
                     </p>
                 </div>
 
@@ -143,6 +154,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="data.js?v=3"></script>
-    <script src="spell.js?v=2"></script>
+    <script src="pins.js?v=1"></script>
+    <script src="spell.js?v=3"></script>
 </body>
 </html>

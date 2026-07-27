@@ -61,15 +61,28 @@ actually typed. **Practise these** drops the misses straight into practice mode.
 
 ### Teacher
 
-Pin correction, in place. The station's pins all appear at once: drag a **pin**
-to move where it points, drag a **label** to move its text (the leader line
-follows). **Save answer key** commits the station, **Undo my edits** reverts to
-the last save, **Restore original key** reloads the pins that ship with the app.
+Where this site's answer key is made. A pin here has to be identifiable with
+**nothing named on the slide**, which is a different judgement from placing it
+where every structure is labelled — so the drill keeps its own pin positions
+rather than inheriting the labeling app's.
 
-Saving writes the same `localStorage` key the labeling app reads. Both sites are
-served from `producer456.github.io`, so they share that storage and a pin fixed
-here is fixed there. This is positions only — to add, delete or re-assign a pin,
-use Teacher Mode in the labeling app.
+The station's pins all appear at once: drag a **pin** to move where it points,
+drag a **label** to move its text (the leader line follows). **Hide labels**
+strips the names away so you see the pin exactly as a student meets it — the
+check that matters when you're deciding whether a placement is identifiable.
+
+- **Save this station** — keeps the edit on this device
+- **Undo my edits** — back to the last save
+- **Restore this station** — back to the key the site ships with
+- **Reset every station** — the same, for all 19 at once
+
+Edits live in `localStorage`, so they only exist on the device that made them.
+**Export key for the site** downloads every station as JSON; commit that over
+`pins.js` (see below) and it becomes the key everyone sees. **Import a key file**
+takes the same file back, for moving a pass between devices.
+
+Positions only — to add, delete or re-assign a pin, use Teacher Mode in the
+labeling app. Editing here never touches that app's storage.
 
 ## Layout
 
@@ -79,12 +92,37 @@ use Teacher Mode in the labeling app.
 | `spell.js` | The drill engine — matching, hints, decks, timer, pin editing |
 | `spell.css` | Drill styles, layered on `styles.css` |
 | `styles.css` | Shared base styles, from the labeling app |
-| `data.js` | Stations, word banks, the answer key, credits |
+| `pins.js` | **This site's answer key** — the pin positions it ships with |
+| `data.js` | Stations, word banks, the labeling app's key, credits |
 | `images/` | The figures |
 
 `data.js`, `styles.css` and `images/` are copied from the labeling app, whose
 generator builds them from the source practical materials. They are committed
 here so this site stands alone.
+
+## Changing the site's pin positions
+
+`pins.js` holds `DRILL_KEYS` — the pin positions this site ships with, and the
+source of truth for every visitor. Pins resolve in this order:
+
+1. edits saved on the current device (`localStorage`)
+2. `DRILL_KEYS` in `pins.js`
+3. `PRESET_KEYS` in `data.js`, as a last resort
+
+To change what everyone sees: open **Teacher**, drag pins, **Save this station**,
+repeat, then **Export key for the site**. Convert the exported JSON into
+`pins.js` and commit it:
+
+```sh
+python3 - <<'EOF'
+import json
+d = json.load(open('bio40b-spelling-drill-pins.json'))
+open('pins.js','w').write('const DRILL_KEYS = %s;\n' % json.dumps(d['keys'], indent=2))
+EOF
+```
+
+Then **Reset every station** in the browser, so the site's freshly committed key
+is what you see rather than the local copy of it.
 
 ## Answer-key backup
 

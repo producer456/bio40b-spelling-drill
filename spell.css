@@ -664,3 +664,37 @@
 }
 
 .labeling-link:hover { background: var(--ocean-foam); color: var(--ocean-deep); }
+
+
+/* ---- Teacher: export panel and student-preview ---- */
+.teacher-export {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--sand-dark);
+}
+
+.export-head {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-light);
+}
+
+.teacher-export .action-btn { width: 100%; }
+
+.teacher-note code {
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--sand-light);
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+/* "Hide labels" — judge the pin the way a student meets it.
+   Toggled on the container because the lines layer is a *previous* sibling of
+   the markers layer, so a sibling selector off #markers-layer never matches. */
+#image-container.labels-hidden .teach-label { display: none; }
+#image-container.labels-hidden #lines-layer { display: none; }
