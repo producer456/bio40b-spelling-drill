@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BIOL 40B — Lab Exam 2 Spelling Drill</title>
+    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="spell.css?v=1">
+</head>
+<body class="spell-page">
+    <header>
+        <h1>BIOL 40B — Lab Exam 2: Spelling Drill</h1>
+        <div class="header-controls">
+            <a class="mode-btn labeling-link" href="https://producer456.github.io/bio40b-lab-exam-2-labeling/"
+               target="_blank" rel="noopener">Labeling app &rarr;</a>
+        </div>
+    </header>
+
+    <div class="drill-bar">
+        <div class="mode-switch" id="mode-switch">
+            <button class="mode-pill active" id="pill-practice" onclick="setDrillMode('practice')">Practice</button>
+            <button class="mode-pill" id="pill-test" onclick="setDrillMode('test')">Test</button>
+            <button class="mode-pill" id="pill-teacher" onclick="setDrillMode('teacher')">Teacher</button>
+        </div>
+        <label class="drill-field">
+            <span>Deck</span>
+            <select id="scope-select"></select>
+        </label>
+        <label class="drill-field checkbox" id="shuffle-field">
+            <input type="checkbox" id="shuffle-toggle">
+            <span>Shuffle</span>
+        </label>
+        <label class="drill-field" id="minutes-field" style="display:none;">
+            <span>Per station</span>
+            <select id="minutes-select">
+                <option value="1">1 min</option>
+                <option value="2" selected>2 min</option>
+                <option value="3">3 min</option>
+                <option value="5">5 min</option>
+            </select>
+        </label>
+        <button class="action-btn data-btn" id="btn-restart" onclick="restartDeck()">Restart deck</button>
+        <button class="action-btn data-btn" id="btn-clear" onclick="clearProgress()">Clear my scores</button>
+        <div class="test-clock" id="test-clock" style="display:none;">
+            <span class="clock-time" id="clock-time">2:00</span>
+            <span class="clock-label" id="clock-label">Station 1 of 19</span>
+        </div>
+        <div class="drill-progress">
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            <span class="progress-text" id="progress-text">—</span>
+        </div>
+    </div>
+
+    <main>
+        <div class="workspace">
+            <div class="image-viewport" id="image-viewport">
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+                    <span class="zoom-level" id="zoom-level">100%</span>
+                    <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">&minus;</button>
+                    <button class="zoom-btn zoom-fit" onclick="zoomToPin()" title="Zoom in on this pin">Pin</button>
+                    <button class="zoom-btn zoom-fit" onclick="zoomReset()" title="Fit to view">Fit</button>
+                </div>
+                <div class="image-container" id="image-container">
+                    <img id="main-image" src="" alt="Lab image" draggable="false">
+                    <svg id="lines-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <div id="markers-layer"></div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="teacher-card" id="teacher-card" style="display:none;">
+                    <div class="station-line" id="teacher-station">—</div>
+                    <p class="teacher-hint">
+                        Drag a <b>pin</b> to move where it points. Drag a <b>label</b> to move the
+                        text; the leader line follows. Nothing is saved until you press Save.
+                    </p>
+                    <div class="teacher-actions">
+                        <button class="action-btn save-btn" onclick="saveTeacherKey()">Save answer key</button>
+                        <button class="action-btn reset-btn" onclick="revertTeacherEdits()">Undo my edits</button>
+                        <button class="action-btn data-btn" onclick="restoreTeacherPreset()">Restore original key</button>
+                    </div>
+                    <div class="teacher-status" id="teacher-status"></div>
+                    <p class="teacher-note">
+                        Saved keys are shared with the labeling app on this device, so a pin fixed
+                        here is fixed there too. To add, delete or re-assign a pin, use
+                        <a href="https://producer456.github.io/bio40b-lab-exam-2-labeling/" target="_blank" rel="noopener">Teacher Mode in the labeling app</a>.
+                    </p>
+                </div>
+
+                <div class="quiz-card" id="quiz-card">
+                    <div class="station-line" id="station-line">Loading…</div>
+                    <div class="prompt-line">What is pin <span id="pin-number">?</span>?</div>
+
+                    <form id="answer-form" autocomplete="off">
+                        <input type="text" id="answer-input"
+                               placeholder="Type the structure's name…"
+                               autocomplete="off" autocorrect="off"
+                               autocapitalize="off" spellcheck="false"
+                               enterkeyhint="go">
+                        <button type="submit" class="action-btn submit-btn" id="btn-check">Check</button>
+                    </form>
+
+                    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+                    <div class="quiz-actions">
+                        <button class="action-btn data-btn" id="btn-back" onclick="prevPin()" style="display:none;">&larr; Back</button>
+                        <button class="action-btn data-btn" id="btn-hint" onclick="giveHint()">Hint</button>
+                        <button class="action-btn reset-btn" id="btn-reveal" onclick="revealAnswer()">Show answer</button>
+                        <button class="action-btn save-btn" id="btn-next" onclick="nextPin()">Next &rarr;</button>
+                        <button class="action-btn submit-btn" id="btn-finish-station" onclick="finishStation()" style="display:none;">Finish station</button>
+                    </div>
+
+                    <div class="hint-box" id="hint-box"></div>
+                </div>
+
+                <div class="scoreboard" id="scoreboard"></div>
+
+                <div class="instructions" id="how-panel">
+                    <h3>How this works</h3>
+                    <p>One pin at a time, all 121 of them. Type the name exactly &mdash;
+                       <b>spelling counts</b>. Case, spaces and punctuation don&rsquo;t.
+                       Miss it and you&rsquo;ll get a hint pointing at which letters are
+                       wrong, and you retype it until it&rsquo;s right.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary" id="summary" style="display:none;"></div>
+    </main>
+
+    <footer class="credits">
+        <details id="credits-panel">
+            <summary>Image credits &amp; licensing</summary>
+            <div id="credits-list"></div>
+            <p class="credits-note">
+                A free study aid for BIOL&nbsp;40B. Figures remain the property of
+                their respective authors under the licences listed above.
+            </p>
+        </details>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="data.js?v=3"></script>
+    <script src="spell.js?v=1"></script>
+</body>
+</html>

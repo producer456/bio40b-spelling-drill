@@ -1,0 +1,666 @@
+/* ============================================================
+   Spelling drill — layered on top of styles.css
+   ============================================================ */
+
+.spell-page .mode-btn {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* ---- Deck bar ---- */
+.drill-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.6);
+    border-bottom: 2px solid var(--sand-dark);
+}
+
+.drill-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+}
+
+.drill-field select {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: white;
+    border: 2px solid var(--sand-dark);
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 40px;
+    max-width: 46vw;
+}
+
+.drill-field.checkbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ocean-light);
+}
+
+.drill-bar .action-btn {
+    width: auto;
+    padding: 8px 14px;
+    min-height: 40px;
+    font-size: 0.82rem;
+}
+
+.drill-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    min-width: 180px;
+}
+
+.progress-track {
+    flex: 1;
+    height: 10px;
+    background: var(--sand-warm);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--sand-dark);
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--ocean-light), var(--ocean-foam));
+    transition: width 0.3s;
+}
+
+.progress-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-mid);
+    white-space: nowrap;
+}
+
+/* ---- Image: container hugs the image so pin percentages line up ---- */
+.spell-page .image-viewport {
+    min-height: 320px;
+    /* Dragging a pin must not smear a text selection across the page. */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.spell-page .image-container {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0 auto;
+    cursor: default;
+}
+
+.spell-page .image-container img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.spell-page .image-viewport.zoomed .image-container { cursor: grab; }
+.spell-page .image-viewport.panning .image-container { cursor: grabbing; }
+
+/* ---- The one pin under question ---- */
+.quiz-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ff6600;
+    border: 2px solid #1a1a1a;
+    transform: translate(-50%, -50%);
+    z-index: 12;
+    box-shadow: 0 0 0 0 rgba(255, 102, 0, 0.7);
+    animation: pinPulse 1.8s infinite;
+}
+
+.quiz-dot.done { background: var(--kelp-green); animation: none; box-shadow: 0 0 8px rgba(74,124,89,0.8); }
+.quiz-dot.shown { background: var(--coral); animation: none; }
+
+@keyframes pinPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 102, 0, 0.75); }
+    70%  { box-shadow: 0 0 0 16px rgba(255, 102, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 102, 0, 0); }
+}
+
+.quiz-tag {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.96);
+    border: 2px solid var(--coral);
+    color: var(--text-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 11;
+    box-shadow: 0 2px 8px rgba(12, 45, 72, 0.25);
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quiz-tag.done  { border-color: var(--kelp-green); color: var(--kelp-green); }
+.quiz-tag.shown { border-color: var(--coral); color: var(--coral); }
+
+/* ---- Quiz card ---- */
+.quiz-card {
+    background: white;
+    border: 2px solid var(--sand-dark);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 4px 16px rgba(12, 45, 72, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.station-line {
+    font-size: 0.9rem;
+    color: var(--ocean-mid);
+    line-height: 1.35;
+}
+
+.station-line .station-sub {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.prompt-line {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+#answer-form {
+    display: flex;
+    gap: 8px;
+}
+
+#answer-input {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 12px;
+    border: 2px solid var(--ocean-light);
+    border-radius: 10px;
+    background: var(--sand-light);
+    color: var(--text-dark);
+    min-height: 46px;
+}
+
+#answer-input:focus {
+    outline: none;
+    border-color: var(--ocean-deep);
+    box-shadow: 0 0 0 3px rgba(95, 189, 206, 0.35);
+}
+
+#answer-input.correct  { border-color: var(--kelp-green); background: #eaf5ec; color: var(--kelp-green); }
+#answer-input.revealed { border-color: var(--coral); background: #fdeee9; color: var(--coral); }
+
+#answer-form .action-btn {
+    width: auto;
+    padding: 12px 18px;
+    min-height: 46px;
+}
+
+/* ---- Feedback ---- */
+.feedback:empty { display: none; }
+
+.feedback {
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    border-left: 4px solid var(--sand-dark);
+    background: var(--sand-light);
+}
+
+.feedback.correct  { border-left-color: var(--kelp-green); background: #eef6f0; }
+.feedback.spelling { border-left-color: var(--sunset);     background: #fdf3ec; }
+.feedback.wrong    { border-left-color: var(--coral);      background: #fdeeea; }
+.feedback.revealed { border-left-color: var(--driftwood);  background: #f6f0e6; }
+
+.fb-head { font-weight: 700; margin-bottom: 3px; }
+.feedback.correct .fb-head  { color: var(--kelp-green); }
+.feedback.spelling .fb-head { color: #b4562f; }
+.feedback.wrong .fb-head    { color: #b23a20; }
+
+.fb-detail { color: var(--text-mid); }
+.fb-func   { margin-top: 6px; font-style: italic; color: var(--text-mid); }
+
+.fb-legend {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* what they typed, letter by letter */
+.diff {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    background: white;
+    border: 1px solid var(--sand-dark);
+    border-radius: 8px;
+    padding: 6px 8px;
+    word-break: break-word;
+}
+
+.diff .ok    { color: var(--text-dark); }
+.diff .bad   { color: #c0392b; font-weight: 700; background: #fbe3df; border-radius: 3px; }
+.diff .extra { color: #c0392b; text-decoration: line-through; opacity: 0.75; }
+.diff .gap,
+.fb-legend .gap { color: var(--ocean-light); font-size: 0.7em; vertical-align: middle; }
+.fb-legend .bad   { color: #c0392b; font-weight: 700; }
+.fb-legend .extra { color: #c0392b; text-decoration: line-through; }
+
+/* ---- Buttons & hints ---- */
+.quiz-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.quiz-actions .action-btn {
+    flex: 1;
+    width: auto;
+    padding: 10px 8px;
+    min-height: 44px;
+    font-size: 0.85rem;
+}
+
+.quiz-actions .action-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.hint-box:empty { display: none; }
+
+.hint-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hint {
+    background: var(--seafoam-glass);
+    border: 1px dashed var(--ocean-foam);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+}
+
+.hint .mask {
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--ocean-deep);
+    font-weight: 700;
+}
+
+.hint .len {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-left: 2px;
+}
+
+/* ---- Scoreboard ---- */
+.scoreboard {
+    background: white;
+    border: 2px solid var(--sand-dark);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.score-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.chip {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 20px;
+    border: 1px solid;
+}
+
+.chip.first { color: var(--kelp-green); border-color: var(--kelp-light); background: #eef6f0; }
+.chip.ok    { color: var(--driftwood); border-color: var(--sand-dark);   background: var(--sand-light); }
+.chip.shown { color: var(--coral);     border-color: var(--coral-light); background: #fdeeea; }
+
+.score-note {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    line-height: 1.4;
+}
+
+/* ---- End-of-deck summary ---- */
+.summary {
+    max-width: 1400px;
+    margin: 16px auto 0;
+    background: white;
+    border: 2px solid var(--sand-dark);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 20px rgba(12, 45, 72, 0.12);
+}
+
+.summary h2 { font-size: 1.15rem; color: var(--ocean-deep); }
+.summary h3 { font-size: 0.95rem; color: var(--text-mid); margin: 14px 0 6px; }
+
+.summary-score {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--ocean-light);
+    margin-top: 4px;
+}
+
+.summary-perfect { color: var(--kelp-green); font-weight: 700; margin-top: 10px; }
+
+.missed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.missed-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--sand-light);
+    font-size: 0.85rem;
+}
+
+.missed-item span { color: var(--text-light); font-size: 0.78rem; }
+
+.missed-item .tag {
+    margin-left: auto;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.missed-item .tag.ok      { color: var(--driftwood); background: var(--sand-warm); }
+.missed-item .tag.revealed { color: var(--coral); background: #fdeeea; }
+
+.summary-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.summary-actions .action-btn { width: auto; padding: 10px 16px; }
+
+/* ---- Teacher mode ---- */
+.teacher-card {
+    background: white;
+    border: 2px solid var(--ocean-light);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 4px 16px rgba(12, 45, 72, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.teacher-hint, .teacher-note {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text-mid);
+}
+
+.teacher-note { font-size: 0.75rem; color: var(--text-light); }
+.teacher-note a { color: var(--ocean-light); }
+
+.teacher-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.teacher-actions .action-btn { width: 100%; }
+
+.teacher-status:empty { display: none; }
+
+.teacher-status {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--sand-light);
+    color: var(--text-mid);
+}
+
+.teacher-status.dirty { background: #fdf3ec; color: #b4562f; }
+.teacher-status.saved { background: #eef6f0; color: var(--kelp-green); }
+.teacher-status.error { background: #fdeeea; color: var(--coral); }
+
+/* Draggable pins and labels */
+.teach-dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border-radius: 50%;
+    background: #ff6600;
+    border: 2px solid #1a1a1a;
+    color: white;
+    font-size: 0.62rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    z-index: 12;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+    box-shadow: 0 0 6px rgba(255, 102, 0, 0.6);
+}
+
+.teach-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.96);
+    border: 2px solid var(--ocean-light);
+    color: var(--text-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 11;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+    box-shadow: 0 2px 6px rgba(12, 45, 72, 0.2);
+}
+
+.teach-dot.grabbing, .teach-label.grabbing { cursor: grabbing; filter: brightness(1.1); }
+.teach-dot:hover  { transform: translate(-50%, -50%) scale(1.15); }
+.teach-label:hover { border-color: var(--ocean-deep); }
+
+/* ---- Practice / Test switch ---- */
+.mode-switch {
+    display: flex;
+    background: var(--ocean-deep);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.mode-pill {
+    padding: 8px 16px;
+    min-height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ocean-sky);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.mode-pill.active { background: var(--ocean-foam); color: var(--ocean-deep); }
+.mode-pill:hover:not(.active) { background: rgba(255,255,255,0.12); color: var(--sand-light); }
+
+/* ---- Station clock ---- */
+.test-clock {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 14px;
+    border-radius: 10px;
+    background: var(--ocean-deep);
+    color: var(--sand-light);
+}
+
+.clock-time {
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+}
+
+.clock-time.warning { color: var(--sunset); animation: clockPulse 1s steps(2, end) infinite; }
+.clock-time.expired { color: var(--coral); }
+
+@keyframes clockPulse { 50% { opacity: 0.35; } }
+
+.clock-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ocean-sky);
+    max-width: 220px;
+}
+
+/* ---- Test report ---- */
+.report-list .missed-item.row-right { background: #eef6f0; }
+.report-list .missed-item.row-wrong { background: #fdeeea; }
+
+.report-list .typed {
+    color: var(--text-mid);
+    font-style: italic;
+}
+
+.station-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.station-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+}
+
+.sb-name {
+    flex: 0 0 40%;
+    color: var(--text-mid);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sb-track {
+    flex: 1;
+    height: 10px;
+    border-radius: 6px;
+    background: var(--sand-warm);
+    border: 1px solid var(--sand-dark);
+    overflow: hidden;
+}
+
+.sb-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--kelp-green), var(--kelp-light));
+}
+
+.sb-score {
+    flex: 0 0 46px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+    .drill-progress { margin-left: 0; width: 100%; }
+    .quiz-tag { max-width: 55vw; }
+
+    /* Stacked layout: keep the pin and the answer box on screen together.
+       Bounding the image by height (not width) lets the container keep hugging
+       it, so the pin percentages still land on the right spot. */
+    .spell-page .image-viewport { min-height: 0; }
+    .spell-page .image-container img { max-height: 34vh; width: auto; }
+}
+
+@media (max-width: 600px) {
+    .drill-bar { padding: 8px 12px; }
+    .clock-time { font-size: 1.25rem; }
+    .clock-label { max-width: 150px; }
+    .sb-name { flex-basis: 34%; }
+    .drill-field select { max-width: 60vw; }
+    .prompt-line { font-size: 0.95rem; }
+    .quiz-actions { flex-wrap: wrap; }
+    .quiz-actions .action-btn { flex: 1 1 45%; }
+    .diff { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quiz-dot { animation: none; box-shadow: 0 0 8px rgba(255,102,0,0.9); }
+    .progress-fill { transition: none; }
+}
+
+/* ---- Link out to the labeling app (separate site) ---- */
+.labeling-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--ocean-foam);
+    color: var(--ocean-sky);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.labeling-link:hover { background: var(--ocean-foam); color: var(--ocean-deep); }
